@@ -1,10 +1,11 @@
 version: "3"
-
 services:
   nextcloud-db:
     image: mariadb:10.6
     container_name: nextcloud-db
     restart: always
+    ports:
+      - "127.0.0.1:3306:3306"  # Seperti postgres di n8n
     command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
     volumes:
       - ./nextcloud-db:/var/lib/mysql
@@ -15,22 +16,20 @@ services:
       - MYSQL_USER=${MYSQL_USER}
     env_file:
       - .env
-    networks:
-      - nextcloud-network
 
   nextcloud-app:
     image: nextcloud:latest
     container_name: nextcloud-app
     restart: always
-    ports:
-      - "9977:80"
+    network_mode: host  # Seperti n8n
     volumes:
       - ./nextcloud-data:/var/www/html
     environment:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_HOST=nextcloud-db
+      - MYSQL_HOST=127.0.0.1  # Connect ke localhost
+      - MYSQL_PORT=3306
       - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_DOMAIN}
       - OVERWRITEPROTOCOL=https
       - OVERWRITEHOST=${NEXTCLOUD_DOMAIN}
@@ -38,11 +37,3 @@ services:
       - OVERWRITECLIURL=https://${NEXTCLOUD_DOMAIN}/nextcloud
     env_file:
       - .env
-    depends_on:
-      - nextcloud-db
-    networks:
-      - nextcloud-network
-
-networks:
-  nextcloud-network:
-    driver: bridge
