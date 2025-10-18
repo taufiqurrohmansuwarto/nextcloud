@@ -1,10 +1,10 @@
 version: "3"
+
 services:
   nextcloud-db:
     image: mariadb:10.6
     container_name: nextcloud-db
     restart: always
-    network_mode: host
     command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
     volumes:
       - ./nextcloud-db:/var/lib/mysql
@@ -15,15 +15,15 @@ services:
       - MYSQL_USER=${MYSQL_USER}
     env_file:
       - .env
+    networks:
+      - nextcloud-network
+
   nextcloud-app:
     image: nextcloud:latest
     container_name: nextcloud-app
     restart: always
-    network_mode: host
     ports:
       - "9977:80"
-    links:
-      - nextcloud-db
     volumes:
       - ./nextcloud-data:/var/www/html
     environment:
@@ -40,3 +40,9 @@ services:
       - .env
     depends_on:
       - nextcloud-db
+    networks:
+      - nextcloud-network
+
+networks:
+  nextcloud-network:
+    driver: bridge
