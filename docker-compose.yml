@@ -4,6 +4,7 @@ services:
     image: mariadb:10.6
     container_name: nextcloud-db
     restart: always
+    network_mode: host
     command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
     volumes:
       - ./nextcloud-db:/var/lib/mysql
@@ -18,6 +19,7 @@ services:
     image: nextcloud:latest
     container_name: nextcloud-app
     restart: always
+    network_mode: host
     ports:
       - "9977:80"
     links:
