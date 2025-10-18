@@ -5,7 +5,7 @@ services:
     container_name: nextcloud-db
     restart: always
     ports:
-      - "127.0.0.1:3306:3306"  # Seperti postgres di n8n
+      - "127.0.0.1:3307:3306"  # ← GANTI ke 3307 atau port lain
     command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
     volumes:
       - ./nextcloud-db:/var/lib/mysql
@@ -21,15 +21,15 @@ services:
     image: nextcloud:latest
     container_name: nextcloud-app
     restart: always
-    network_mode: host  # Seperti n8n
+    network_mode: host
     volumes:
       - ./nextcloud-data:/var/www/html
     environment:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_HOST=127.0.0.1  # Connect ke localhost
-      - MYSQL_PORT=3306
+      - MYSQL_HOST=127.0.0.1
+      - MYSQL_PORT=3307  # ← SESUAIKAN dengan port di atas
       - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_DOMAIN}
       - OVERWRITEPROTOCOL=https
       - OVERWRITEHOST=${NEXTCLOUD_DOMAIN}
