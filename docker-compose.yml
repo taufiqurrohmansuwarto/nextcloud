@@ -7,7 +7,7 @@ services:
     restart: always
     command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
     ports:
-      - "127.0.0.1:3306:3306"
+      - "127.0.0.1:3309:3306"
     volumes:
       - ./nextcloud-db:/var/lib/mysql
     environment:
@@ -29,7 +29,7 @@ services:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_HOST=127.0.0.1
-      - MYSQL_TCP_PORT=3306
+      - MYSQL_TCP_PORT=3309
       - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_DOMAIN}
       - OVERWRITEPROTOCOL=https
       - OVERWRITEHOST=${NEXTCLOUD_DOMAIN}
