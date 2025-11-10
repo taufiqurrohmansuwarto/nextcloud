@@ -17,7 +17,7 @@ services:
     env_file:
       - .env
   nextcloud-app:
-    image: nextcloud:apache
+    image: nextcloud:fpm
     container_name: nextcloud-app
     restart: always
     network_mode: host
@@ -32,7 +32,6 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_HOST=127.0.0.1
       - MYSQL_TCP_PORT=3307
-      - APACHE_HTTP_PORT=9977
       - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_DOMAIN}
       - OVERWRITEPROTOCOL=https
       - OVERWRITEHOST=${NEXTCLOUD_DOMAIN}
@@ -40,4 +39,3 @@ services:
       - OVERWRITECLIURL=https://${NEXTCLOUD_DOMAIN}/nextcloud
     env_file:
       - .env
-    command: sh -c "sed -i 's/Listen 80/Listen 9977/g' /etc/apache2/ports.conf && sed -i 's/:80/:9977/g' /etc/apache2/sites-available/000-default.conf && apache2-foreground"
