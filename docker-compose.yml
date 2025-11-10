@@ -22,6 +22,8 @@ services:
       - "9977:80"
     links:
       - nextcloud-db
+    dns:
+      - 1.1.1.1
     volumes:
       - ./nextcloud-data:/var/www/html
     environment:
