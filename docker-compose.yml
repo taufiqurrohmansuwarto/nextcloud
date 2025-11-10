@@ -1,10 +1,13 @@
-version: "3"
+version: "3.8"
+
 services:
   nextcloud-db:
     image: mariadb:10.6
     container_name: nextcloud-db
     restart: always
     command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    networks:
+      - nextcloud-net
     volumes:
       - ./nextcloud-db:/var/lib/mysql
     environment:
@@ -14,14 +17,21 @@ services:
       - MYSQL_USER=${MYSQL_USER}
     env_file:
       - .env
+    # tidak ada ports -> database tidak bisa diakses dari luar container
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+
   nextcloud-app:
     image: nextcloud:latest
     container_name: nextcloud-app
     restart: always
     ports:
-      - "9977:80"
-    links:
+      - "9977:80"  # kamu bisa ubah sesuai kebutuhan
+    depends_on:
       - nextcloud-db
+    networks:
+      - nextcloud-net
     volumes:
       - ./nextcloud-data:/var/www/html
     environment:
@@ -36,5 +46,10 @@ services:
       - OVERWRITECLIURL=https://${NEXTCLOUD_DOMAIN}/nextcloud
     env_file:
       - .env
-    depends_on:
-      - nextcloud-db
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+
+networks:
+  nextcloud-net:
+    driver: bridge
