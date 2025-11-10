@@ -6,8 +6,6 @@ services:
     container_name: nextcloud-db
     restart: always
     command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
-    networks:
-      - nextcloud-net
     volumes:
       - ./nextcloud-db:/var/lib/mysql
     environment:
@@ -17,38 +15,32 @@ services:
       - MYSQL_USER=${MYSQL_USER}
     env_file:
       - .env
-    # tidak ada ports -> database tidak bisa diakses dari luar container
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
+    # biarkan pakai bridge network default
+    networks:
+      - nextcloud-net
 
   nextcloud-app:
     image: nextcloud:latest
     container_name: nextcloud-app
     restart: always
-    ports:
-      - "9977:80"  # kamu bisa ubah sesuai kebutuhan
-    depends_on:
-      - nextcloud-db
-    networks:
-      - nextcloud-net
-    volumes:
-      - ./nextcloud-data:/var/www/html
+    # gunakan network host agar DNS langsung dari sistem host
+    network_mode: "host"
     environment:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_HOST=nextcloud-db
+      - MYSQL_HOST=127.0.0.1
       - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_DOMAIN}
       - OVERWRITEPROTOCOL=https
       - OVERWRITEHOST=${NEXTCLOUD_DOMAIN}
       - OVERWRITEWEBROOT=/nextcloud
       - OVERWRITECLIURL=https://${NEXTCLOUD_DOMAIN}/nextcloud
+    volumes:
+      - ./nextcloud-data:/var/www/html
+    depends_on:
+      - nextcloud-db
     env_file:
       - .env
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
 
 networks:
   nextcloud-net:
