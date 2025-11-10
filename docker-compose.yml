@@ -17,7 +17,7 @@ services:
     env_file:
       - .env
   nextcloud-app:
-    image: nextcloud:latest
+    image: nextcloud:32
     container_name: nextcloud-app
     restart: always
     extra_hosts:
