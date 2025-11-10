@@ -17,7 +17,7 @@ services:
     env_file:
       - .env
   nextcloud-app:
-    image: nextcloud:fpm
+    image: nextcloud:apache
     container_name: nextcloud-app
     restart: always
     network_mode: host
@@ -39,3 +39,4 @@ services:
       - OVERWRITECLIURL=https://${NEXTCLOUD_DOMAIN}/nextcloud
     env_file:
       - .env
+    command: sh -c "sed -i 's/Listen 80/Listen 9977/g' /etc/apache2/ports.conf && sed -i 's/:80/:9977/g' /etc/apache2/sites-available/000-default.conf && apache2-foreground"
