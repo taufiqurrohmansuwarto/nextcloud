@@ -5,9 +5,7 @@ services:
     image: mariadb:10.6
     container_name: nextcloud-db
     restart: always
-    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW --bind-address=0.0.0.0
-    ports:
-      - "172.17.0.1:3308:3306"
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
     volumes:
       - ./nextcloud-db:/var/lib/mysql
     environment:
@@ -22,15 +20,20 @@ services:
     image: nextcloud:latest
     container_name: nextcloud-app
     restart: always
-    network_mode: host
+    ports:
+      - "9977:80"
+    links:
+      - nextcloud-db
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     volumes:
       - ./nextcloud-data:/var/www/html
     environment:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_HOST=172.17.0.1
-      - MYSQL_TCP_PORT=3308
+      - MYSQL_HOST=nextcloud-db
       - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_DOMAIN}
       - OVERWRITEPROTOCOL=https
       - OVERWRITEHOST=${NEXTCLOUD_DOMAIN}
@@ -38,4 +41,5 @@ services:
       - OVERWRITECLIURL=https://${NEXTCLOUD_DOMAIN}/nextcloud
     env_file:
       - .env
-    command: sh -c "sed -i 's/Listen 80/Listen 9977/g' /etc/apache2/ports.conf && sed -i 's/:80/:9977/g' /etc/apache2/sites-available/000-default.conf && apache2-foreground"
+    depends_on:
+      - nextcloud-db
