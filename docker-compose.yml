@@ -22,7 +22,7 @@ services:
     restart: always
     ports:
       - "9977:80"
-    depends_on:
+    links:
       - nextcloud-db
     volumes:
       - ./nextcloud-data:/var/www/html
@@ -38,3 +38,5 @@ services:
       - OVERWRITECLIURL=https://${NEXTCLOUD_DOMAIN}/nextcloud
     env_file:
       - .env
+    depends_on:
+      - nextcloud-db
