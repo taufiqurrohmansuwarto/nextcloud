@@ -16,14 +16,29 @@ services:
     env_file:
       - .env
 
+  nextcloud-redis:
+    image: redis:alpine
+    container_name: nextcloud-redis
+    restart: always
+    # Tidak perlu ports karena hanya diakses internal oleh Nextcloud
+
+  nextcloud-clamav:
+    image: clamav/clamav:latest
+    container_name: nextcloud-clamav
+    restart: unless-stopped
+    environment:
+      # Agar database virus update otomatis
+      - CLAMAV_NO_FRESHCLAM=false
+    volumes:
+      # Simpan database virus agar tidak download ulang tiap restart
+      - nextcloud-clamav-db:/var/lib/clamav
+
   nextcloud-app:
     image: nextcloud:latest
     container_name: nextcloud-app
     restart: always
     ports:
       - "9977:80"
-    links:
-      - nextcloud-db
     volumes:
       - ./nextcloud-data:/var/www/html
     environment:
@@ -31,6 +46,7 @@ services:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_HOST=nextcloud-db
+      - REDIS_HOST=nextcloud-redis
       - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_DOMAIN}
       - OVERWRITEPROTOCOL=https
       - OVERWRITEHOST=${NEXTCLOUD_DOMAIN}
@@ -40,3 +56,8 @@ services:
       - .env
     depends_on:
       - nextcloud-db
+      - nextcloud-redis
+      - nextcloud-clamav
+
+volumes:
+  nextcloud-clamav-db:
