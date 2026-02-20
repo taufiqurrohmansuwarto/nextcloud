@@ -1,4 +1,4 @@
-version: "3"
+version: "3.8"
 
 services:
   nextcloud-db:
@@ -7,7 +7,8 @@ services:
     restart: always
     command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
     volumes:
-      - ./nextcloud-db:/var/lib/mysql
+      # [UBAH KESINI] Arahkan database ke LVM
+      - /srv/nextcloud/db:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
@@ -15,32 +16,46 @@ services:
       - MYSQL_USER=${MYSQL_USER}
     env_file:
       - .env
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 16G      # Beri MariaDB keleluasaan 16GB RAM
 
   nextcloud-redis:
     image: redis:alpine
     container_name: nextcloud-redis
     restart: always
-    # Tidak perlu ports karena hanya diakses internal oleh Nextcloud
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G       # Redis cukup 4GB untuk cache super cepat
 
   nextcloud-clamav:
     image: clamav/clamav:latest
     container_name: nextcloud-clamav
     restart: unless-stopped
     environment:
-      # Agar database virus update otomatis
       - CLAMAV_NO_FRESHCLAM=false
     volumes:
-      # Simpan database virus agar tidak download ulang tiap restart
       - nextcloud-clamav-db:/var/lib/clamav
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G       # ClamAV butuh minimal 3-4GB saat update database virus
 
   nextcloud-app:
     image: nextcloud:latest
     container_name: nextcloud-app
     restart: always
     ports:
-      - "9977:80"
+      # [UBAH KESINI] Kunci port 9977 hanya untuk Nginx lokal (Keamanan)
+      - "127.0.0.1:9977:80"
     volumes:
-      - ./nextcloud-data:/var/www/html
+      # [UBAH KESINI] Arahkan file aplikasi dan user ke LVM
+      - /srv/nextcloud/data:/var/www/html
     environment:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
@@ -52,12 +67,20 @@ services:
       - OVERWRITEHOST=${NEXTCLOUD_DOMAIN}
       - OVERWRITEWEBROOT=/nextcloud
       - OVERWRITECLIURL=https://${NEXTCLOUD_DOMAIN}/nextcloud
+      # [TAMBAHAN] Optimasi PHP untuk server besar
+      - PHP_MEMORY_LIMIT=4G
+      - PHP_UPLOAD_LIMIT=10G
     env_file:
       - .env
     depends_on:
       - nextcloud-db
       - nextcloud-redis
       - nextcloud-clamav
+    deploy:
+      resources:
+        limits:
+          cpus: '16.0'
+          memory: 16G      # App Nextcloud maksimal pakai 16GB RAM
 
 volumes:
   nextcloud-clamav-db:
